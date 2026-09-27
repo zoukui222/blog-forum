@@ -107,7 +107,10 @@ export default {
                 if (res.data.role === 'ADMIN') {
                   this.$router.push('/home')
                 } else {
-                  this.$router.push('/front/home')
+                  // 修复：原为硬编码 '/front/home'，移动端路由表（mRoutes）中不存在该路径，
+                  // 导致手机上登录后进入 404 页面。此处按设备分流，与全局路由守卫逻辑保持一致。
+                  const type = detectDevice()
+                  this.$router.push(type === 'Mobile' ? '/mobile/home' : '/front/home')
                 }
               }, 500)
             } else {
