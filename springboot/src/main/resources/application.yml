@@ -1,0 +1,41 @@
+server:
+  port: 9090
+
+# 数据库配置
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root   #你本地的数据库用户名
+    password: change_me #你本地的数据库密码
+    url: jdbc:mysql://localhost:3306/blog-xs?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+# 配置mybatis实体和xml映射
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.entity
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml  # 自定义Mapper XML文件存放路径（可选，无XML可省略）
+  type-aliases-package: com.example.entity  # 实体类包名，简化XML中的类名引用（可选）
+  configuration:
+    map-underscore-to-camel-case: true  # 自动开启下划线转驼峰（如数据库user_name → 实体userName，MP默认开启）
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 开启SQL日志打印（开发环境推荐，生产环境关闭）
+  global-config:
+    db-config:
+      id-type: auto  # 主键策略：MySQL推荐auto（自增），Oracle可使用assign_id（雪花算法）
+
+# 分页
+pagehelper:
+  helper-dialect: mysql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
+
+ip: localhost
