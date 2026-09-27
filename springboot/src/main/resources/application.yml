@@ -2,12 +2,18 @@ server:
   port: 9090
 
 # 数据库配置
+# 敏感信息不写入版本库：
+#   本地开发 —— 真实账号密码放在 application-local.yml（已被 .gitignore 排除），
+#               启动时通过下面的 spring.profiles.active 自动加载；
+#   部署环境 —— 通过环境变量 DB_USERNAME / DB_PASSWORD / DB_HOST / DB_PORT 注入。
 spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root   #你本地的数据库用户名
-    password: change_me #你本地的数据库密码
-    url: jdbc:mysql://localhost:3306/blog-xs?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:change_me}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/blog-xs?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&useSSL=false&serverTimezone=GMT%2b8&allowPublicKeyRetrieval=true
   servlet:
     multipart:
       max-file-size: 100MB
@@ -46,6 +52,7 @@ ip: localhost
 file:
   access-url: http://localhost/files/
 
-# JWT 签名密钥（独立于用户密码；生产环境请替换为随机值并改为环境变量注入）
+# JWT 签名密钥（独立于用户密码，避免以密码作为签名密钥）
+#   本地开发可在 application-local.yml 中覆盖；生产环境通过环境变量 JWT_SECRET 注入随机值
 jwt:
-  secret: dev-only-secret-please-change-in-production
+  secret: ${JWT_SECRET:dev-only-secret-please-change-in-production}

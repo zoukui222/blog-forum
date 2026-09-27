@@ -208,7 +208,7 @@ CREATE TABLE `notice`  (
 INSERT INTO `notice` VALUES (1, '今天系统正式上线，开始内测', '今天系统正式上线，开始内测', '2023-09-05', 'admin');
 INSERT INTO `notice` VALUES (2, '所有功能都已完成，可以正常使用', '所有功能都已完成，可以正常使用', '2023-09-05', 'admin');
 INSERT INTO `notice` VALUES (3, '今天天气很不错，可以出去一起玩了', '今天天气很不错，可以出去一起玩了', '2023-09-05', 'admin');
-INSERT INTO `notice` VALUES (4, '功能测试中', '下载并安装微信开发者工具\n打开微信开发者工具\n导入项目目录下的 REDACTED 文件夹\n配置小程序的appid（在[project.config.json](file:///E:/WorkSpace/back/2025/REDACTED/web-sky-weixin-uniapp/project.config.json)中）\n点击编译即可预览\n调试基础库切换为2.0+ 注意：小程序端需要后端服务正常运行才能完整使用各项功能。', '2026-02-03', '管理员');
+INSERT INTO `notice` VALUES (4, '社区发文规范已更新', '请勿发布违规内容，优质原创博客将优先推荐到首页榜单。', '2026-02-03', '管理员');
 
 -- ----------------------------
 -- Table structure for user

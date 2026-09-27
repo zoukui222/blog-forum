@@ -30,3 +30,13 @@ Thumbs.db
 #    对外公开仓库前请清理。
 # 3. files/ 与 springboot/files/ 是运行时上传目录，为保证演示可用暂不忽略。
 # ============================================================
+
+# 本地配置（含真实数据库密码）
+springboot/src/main/resources/application-local.yml
+
+# 运行时上传目录（用户上传的头像/封面，不入库）
+springboot/files/
+files/
+
+# 项目资料（录屏、报告等求职材料，不入库）
+资料/
