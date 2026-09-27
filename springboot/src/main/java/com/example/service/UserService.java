@@ -1,6 +1,7 @@
 package com.example.service;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.example.common.enums.ResultCodeEnum;
 import com.example.common.enums.RoleEnum;
 import com.example.entity.Account;
@@ -77,6 +78,20 @@ public class UserService {
      * 修改
      */
     public void updateById(User user) {
+        // 归属校验 + 字段白名单：非管理员只能改自己，且不允许改角色与密码（改密码走 /updatePassword）
+        Account currentUser = TokenUtils.getCurrentUser();
+        if (!RoleEnum.ADMIN.name().equals(currentUser.getRole())) {
+            user.setId(currentUser.getId());
+            user.setRole(null);
+            user.setPassword(null);
+            // 白名单过滤后若无任何可更新字段，直接返回，避免生成 "update user set where id=?" 非法 SQL
+            if (StrUtil.isBlank(user.getUsername()) && StrUtil.isBlank(user.getName())
+                    && StrUtil.isBlank(user.getAvatar()) && StrUtil.isBlank(user.getSex())
+                    && StrUtil.isBlank(user.getPhone()) && StrUtil.isBlank(user.getEmail())
+                    && StrUtil.isBlank(user.getInfo()) && StrUtil.isBlank(user.getBirth())) {
+                return;
+            }
+        }
         userMapper.updateById(user);
     }
 
@@ -114,8 +129,9 @@ public class UserService {
         if (!account.getPassword().equals(dbUser.getPassword())) {
             throw new CustomException(ResultCodeEnum.USER_ACCOUNT_ERROR);
         }
-        // 生成token
-        String tokenData = dbUser.getId() + "-" + RoleEnum.USER.name();
+        // 生成token：角色取库中真实值（管理员为 ADMIN），兜底 USER
+        String role = ObjectUtil.isNotEmpty(dbUser.getRole()) ? dbUser.getRole() : RoleEnum.USER.name();
+        String tokenData = dbUser.getId() + "-" + role;
         String token = TokenUtils.createToken(tokenData, dbUser.getPassword());
         dbUser.setToken(token);
         return dbUser;

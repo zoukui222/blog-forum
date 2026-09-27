@@ -1,5 +1,7 @@
 package com.example.controller;
 
+import com.example.common.annotation.RequireRole;
+
 import com.example.common.Result;
 import com.example.entity.Notice;
 import com.example.service.NoticeService;
@@ -22,6 +24,7 @@ public class NoticeController {
      * 新增
      */
     @PostMapping("/add")
+    @RequireRole
     public Result add(@RequestBody Notice notice) {
         noticeService.add(notice);
         return Result.success();
@@ -31,6 +34,7 @@ public class NoticeController {
      * 删除
      */
     @DeleteMapping("/delete/{id}")
+    @RequireRole
     public Result deleteById(@PathVariable Integer id) {
         noticeService.deleteById(id);
         return Result.success();
@@ -40,6 +44,7 @@ public class NoticeController {
      * 批量删除
      */
     @DeleteMapping("/delete/batch")
+    @RequireRole
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         noticeService.deleteBatch(ids);
         return Result.success();
@@ -49,6 +54,7 @@ public class NoticeController {
      * 修改
      */
     @PutMapping("/update")
+    @RequireRole
     public Result updateById(@RequestBody Notice notice) {
         noticeService.updateById(notice);
         return Result.success();
@@ -76,6 +82,7 @@ public class NoticeController {
      * 分页查询
      */
     @GetMapping("/selectPage")
+    @RequireRole
     public Result selectPage(Notice notice,
                              @RequestParam(defaultValue = "1") Integer pageNum,
                              @RequestParam(defaultValue = "10") Integer pageSize) {

@@ -2,6 +2,7 @@ package com.example.service;
 
 import cn.hutool.core.date.DateUtil;
 import com.example.common.enums.ResultCodeEnum;
+import com.example.common.enums.RoleEnum;
 import com.example.entity.Account;
 import com.example.entity.Activity;
 import com.example.entity.ActivitySign;
@@ -60,6 +61,12 @@ public class ActivitySignService {
     }
 
     public void userDelete(Integer activityId, Integer useId) {
-        activitySignMapper.userDelete(activityId, useId);
+        // 归属校验：非管理员只能取消自己的报名
+        Account currentUser = TokenUtils.getCurrentUser();
+        Integer targetUserId = useId;
+        if (!RoleEnum.ADMIN.name().equals(currentUser.getRole())) {
+            targetUserId = currentUser.getId();
+        }
+        activitySignMapper.userDelete(activityId, targetUserId);
     }
 }

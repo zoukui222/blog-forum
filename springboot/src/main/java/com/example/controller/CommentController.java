@@ -1,5 +1,7 @@
 package com.example.controller;
 
+import com.example.common.annotation.RequireRole;
+
 import com.example.common.Result;
 import com.example.entity.Comment;
 import com.example.service.CommentService;
@@ -31,6 +33,7 @@ public class CommentController {
      * 删除
      */
     @DeleteMapping("/delete/{id}")
+    @RequireRole
     public Result deleteById(@PathVariable Integer id) {
         commentService.deleteById(id);
         return Result.success();
@@ -48,6 +51,7 @@ public class CommentController {
      * 批量删除
      */
     @DeleteMapping("/delete/batch")
+    @RequireRole
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         commentService.deleteBatch(ids);
         return Result.success();
@@ -57,6 +61,7 @@ public class CommentController {
      * 修改
      */
     @PutMapping("/update")
+    @RequireRole
     public Result updateById(@RequestBody Comment comment) {
         commentService.updateById(comment);
         return Result.success();
@@ -84,6 +89,7 @@ public class CommentController {
      * 分页查询
      */
     @GetMapping("/selectPage")
+    @RequireRole
     public Result selectPage(Comment comment,
                              @RequestParam(defaultValue = "1") Integer pageNum,
                              @RequestParam(defaultValue = "10") Integer pageSize) {

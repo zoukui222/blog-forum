@@ -1,5 +1,7 @@
 package com.example.controller;
 
+import com.example.common.annotation.RequireRole;
+
 import com.example.common.Result;
 import com.example.entity.Admin;
 import com.example.service.AdminService;
@@ -13,6 +15,7 @@ import java.util.List;
  **/
 @RestController
 @RequestMapping("/admin")
+@RequireRole
 public class AdminController {
 
     @Resource

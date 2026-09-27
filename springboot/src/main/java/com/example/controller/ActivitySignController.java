@@ -1,5 +1,7 @@
 package com.example.controller;
 
+import com.example.common.annotation.RequireRole;
+
 import com.example.common.Result;
 import com.example.entity.Activity;
 import com.example.entity.ActivitySign;
@@ -27,6 +29,7 @@ public class ActivitySignController {
      * 删除
      */
     @DeleteMapping("/delete/{id}")
+    @RequireRole
     public Result deleteById(@PathVariable Integer id) {
         activitySignService.deleteById(id);
         return Result.success();
@@ -43,6 +46,7 @@ public class ActivitySignController {
      * 批量删除
      */
     @DeleteMapping("/delete/batch")
+    @RequireRole
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         activitySignService.deleteBatch(ids);
         return Result.success();
@@ -52,6 +56,7 @@ public class ActivitySignController {
      * 分页查询
      */
     @GetMapping("/selectPage")
+    @RequireRole
     public Result selectPage(ActivitySign activitySign,
                              @RequestParam(defaultValue = "1") Integer pageNum,
                              @RequestParam(defaultValue = "10") Integer pageSize) {

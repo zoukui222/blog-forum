@@ -1,5 +1,7 @@
 package com.example.controller;
 
+import com.example.common.annotation.RequireRole;
+
 import com.example.common.Result;
 import com.example.entity.Category;
 import com.example.service.CategoryService;
@@ -22,6 +24,7 @@ public class CategoryController {
      * 新增
      */
     @PostMapping("/add")
+    @RequireRole
     public Result add(@RequestBody Category category) {
         categoryService.add(category);
         return Result.success();
@@ -31,6 +34,7 @@ public class CategoryController {
      * 删除
      */
     @DeleteMapping("/delete/{id}")
+    @RequireRole
     public Result deleteById(@PathVariable Integer id) {
         categoryService.deleteById(id);
         return Result.success();
@@ -40,6 +44,7 @@ public class CategoryController {
      * 批量删除
      */
     @DeleteMapping("/delete/batch")
+    @RequireRole
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         categoryService.deleteBatch(ids);
         return Result.success();
@@ -49,6 +54,7 @@ public class CategoryController {
      * 修改
      */
     @PutMapping("/update")
+    @RequireRole
     public Result updateById(@RequestBody Category category) {
         categoryService.updateById(category);
         return Result.success();
@@ -76,6 +82,7 @@ public class CategoryController {
      * 分页查询
      */
     @GetMapping("/selectPage")
+    @RequireRole
     public Result selectPage(Category category,
                              @RequestParam(defaultValue = "1") Integer pageNum,
                              @RequestParam(defaultValue = "10") Integer pageSize) {

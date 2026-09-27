@@ -1,5 +1,7 @@
 package com.example.controller;
 
+import com.example.common.annotation.RequireRole;
+
 import com.example.common.Result;
 import com.example.entity.User;
 import com.example.service.UserService;
@@ -22,6 +24,7 @@ public class UserController {
      * 新增
      */
     @PostMapping("/add")
+    @RequireRole
     public Result add(@RequestBody User user) {
         userService.add(user);
         return Result.success();
@@ -31,6 +34,7 @@ public class UserController {
      * 删除
      */
     @DeleteMapping("/delete/{id}")
+    @RequireRole
     public Result deleteById(@PathVariable Integer id) {
         userService.deleteById(id);
         return Result.success();
@@ -40,6 +44,7 @@ public class UserController {
      * 批量删除
      */
     @DeleteMapping("/delete/batch")
+    @RequireRole
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         userService.deleteBatch(ids);
         return Result.success();
@@ -58,6 +63,7 @@ public class UserController {
      * 根据ID查询
      */
     @GetMapping("/selectById/{id}")
+    @RequireRole
     public Result selectById(@PathVariable Integer id) {
         User user = userService.selectById(id);
         return Result.success(user);
@@ -67,6 +73,7 @@ public class UserController {
      * 查询所有
      */
     @GetMapping("/selectAll")
+    @RequireRole
     public Result selectAll(User user) {
         List<User> list = userService.selectAll(user);
         return Result.success(list);
@@ -76,6 +83,7 @@ public class UserController {
      * 分页查询
      */
     @GetMapping("/selectPage")
+    @RequireRole
     public Result selectPage(User user,
                              @RequestParam(defaultValue = "1") Integer pageNum,
                              @RequestParam(defaultValue = "10") Integer pageSize) {

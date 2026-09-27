@@ -6,6 +6,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.example.common.Constants;
+import com.example.common.annotation.RequireRole;
 import com.example.common.enums.ResultCodeEnum;
 import com.example.common.enums.RoleEnum;
 import com.example.entity.Account;
@@ -15,6 +16,7 @@ import com.example.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.annotation.Resource;
@@ -70,6 +72,18 @@ public class JwtInterceptor implements HandlerInterceptor {
             jwtVerifier.verify(token); // 验证token
         } catch (JWTVerificationException e) {
             throw new CustomException(ResultCodeEnum.TOKEN_CHECK_ERROR);
+        }
+        // 3. 授权校验：接口(或类)上标注了 @RequireRole 的，校验当前账号角色
+        if (handler instanceof HandlerMethod) {
+            HandlerMethod handlerMethod = (HandlerMethod) handler;
+            RequireRole requireRole = handlerMethod.getMethodAnnotation(RequireRole.class);
+            if (requireRole == null) {
+                requireRole = handlerMethod.getBeanType().getAnnotation(RequireRole.class);
+            }
+            if (requireRole != null && !requireRole.value().equals(account.getRole())) {
+                log.warn("越权访问已拦截: userId={}, role={}, uri={}", account.getId(), account.getRole(), request.getRequestURI());
+                throw new CustomException(ResultCodeEnum.NO_AUTH);
+            }
         }
         return true;
     }

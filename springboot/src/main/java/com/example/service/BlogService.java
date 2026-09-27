@@ -6,8 +6,10 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.example.common.Result;
 import com.example.common.enums.LikesModuleEnum;
+import com.example.common.enums.ResultCodeEnum;
 import com.example.common.enums.RoleEnum;
 import com.example.entity.*;
+import com.example.exception.CustomException;
 import com.example.mapper.BlogMapper;
 import com.example.mapper.UserMapper;
 import com.example.utils.TokenUtils;
@@ -47,7 +49,22 @@ public class BlogService {
      * 删除
      */
     public void deleteById(Integer id) {
+        Blog dbBlog = blogMapper.selectById(id);
+        this.checkOwner(dbBlog == null ? null : dbBlog.getUserId());
         blogMapper.deleteById(id);
+    }
+
+    /**
+     * 归属校验：管理员可操作全部内容，普通用户仅能操作自己发布的内容
+     */
+    private void checkOwner(Integer ownerId) {
+        Account currentUser = TokenUtils.getCurrentUser();
+        if (RoleEnum.ADMIN.name().equals(currentUser.getRole())) {
+            return;
+        }
+        if (ownerId == null || !ownerId.equals(currentUser.getId())) {
+            throw new CustomException(ResultCodeEnum.NO_AUTH);
+        }
     }
 
     /**
@@ -55,7 +72,7 @@ public class BlogService {
      */
     public void deleteBatch(List<Integer> ids) {
         for (Integer id : ids) {
-            blogMapper.deleteById(id);
+            this.deleteById(id);
         }
     }
 
@@ -63,6 +80,8 @@ public class BlogService {
      * 修改
      */
     public void updateById(Blog blog) {
+        Blog dbBlog = blogMapper.selectById(blog.getId());
+        this.checkOwner(dbBlog == null ? null : dbBlog.getUserId());
         blogMapper.updateById(blog);
     }
 

@@ -1,5 +1,7 @@
 package com.example.controller;
 
+import com.example.common.annotation.RequireRole;
+
 import com.example.common.Result;
 import com.example.entity.Activity;
 import com.example.entity.Blog;
@@ -23,6 +25,7 @@ public class ActivityController {
      * 新增
      */
     @PostMapping("/add")
+    @RequireRole
     public Result add(@RequestBody Activity activity) {
         activityService.add(activity);
         return Result.success();
@@ -32,6 +35,7 @@ public class ActivityController {
      * 删除
      */
     @DeleteMapping("/delete/{id}")
+    @RequireRole
     public Result deleteById(@PathVariable Integer id) {
         activityService.deleteById(id);
         return Result.success();
@@ -41,6 +45,7 @@ public class ActivityController {
      * 批量删除
      */
     @DeleteMapping("/delete/batch")
+    @RequireRole
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         activityService.deleteBatch(ids);
         return Result.success();
@@ -55,6 +60,7 @@ public class ActivityController {
      * 修改
      */
     @PutMapping("/update")
+    @RequireRole
     public Result updateById(@RequestBody Activity activity) {
         activityService.updateById(activity);
         return Result.success();

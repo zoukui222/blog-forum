@@ -3,6 +3,11 @@ package com.example.service;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.common.Result;
+import com.example.common.enums.ResultCodeEnum;
+import com.example.common.enums.RoleEnum;
+import com.example.exception.CustomException;
+import com.example.utils.TokenUtils;
+import com.example.entity.Account;
 import com.example.entity.Blog;
 import com.example.entity.Comment;
 import com.example.entity.User;
@@ -90,6 +95,13 @@ public class CommentService {
      * 递归删除
      */
     public void deleteDeep(Integer id) {
+        // 归属校验：管理员可删除全部，普通用户仅能删除自己的评论
+        Comment dbComment = commentMapper.selectById(id);
+        Account currentUser = TokenUtils.getCurrentUser();
+        if (!RoleEnum.ADMIN.name().equals(currentUser.getRole())
+                && (dbComment == null || !currentUser.getId().equals(dbComment.getUserId()))) {
+            throw new CustomException(ResultCodeEnum.NO_AUTH);
+        }
         this.deepDelete(id);
     }
 

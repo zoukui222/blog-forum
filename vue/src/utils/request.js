@@ -1,5 +1,6 @@
 import axios from 'axios'
 import router from "@/router";
+import { Message } from 'element-ui'
 
 // 创建可一个新的axios对象
 const request = axios.create({
@@ -33,6 +34,9 @@ request.interceptors.response.use(
         }
         if (res.code === '401') {
             router.push('/login')
+        }
+        if (res.code === '403') {
+            Message.error(res.msg || '无权限访问')
         }
         return res;
     },
