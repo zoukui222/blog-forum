@@ -13,6 +13,7 @@ import com.example.entity.Account;
 import com.example.exception.CustomException;
 import com.example.service.AdminService;
 import com.example.service.UserService;
+import com.example.utils.TokenUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -38,6 +39,11 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // 0. 静态资源读取放行：<img src> 无法携带 token；仅放行 GET，上传与删除仍需鉴权
+        if ("GET".equalsIgnoreCase(request.getMethod())
+                && request.getRequestURI().startsWith("/files/")) {
+            return true;
+        }
         // 1. 从http请求的header中获取token
         String token = request.getHeader(Constants.TOKEN);
         if (ObjectUtil.isEmpty(token)) {
@@ -68,7 +74,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
         try {
             // 用户密码加签验证 token
-            JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(account.getPassword())).build();
+            JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(TokenUtils.getSecret())).build();
             jwtVerifier.verify(token); // 验证token
         } catch (JWTVerificationException e) {
             throw new CustomException(ResultCodeEnum.TOKEN_CHECK_ERROR);

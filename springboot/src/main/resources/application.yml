@@ -45,3 +45,7 @@ ip: localhost
 #   经 Nginx 部署（80 端口同源）：http://localhost/files/
 file:
   access-url: http://localhost/files/
+
+# JWT 签名密钥（独立于用户密码；生产环境请替换为随机值并改为环境变量注入）
+jwt:
+  secret: dev-only-secret-please-change-in-production

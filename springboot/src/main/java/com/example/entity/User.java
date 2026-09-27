@@ -1,9 +1,12 @@
 package com.example.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class User extends Account {
 
     private Integer id;
     private String username;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private String name;
     private String avatar;

@@ -8,6 +8,7 @@ import com.example.entity.Account;
 import com.example.entity.Admin;
 import com.example.exception.CustomException;
 import com.example.mapper.AdminMapper;
+import com.example.utils.PasswordUtils;
 import com.example.utils.TokenUtils;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -37,6 +38,7 @@ public class AdminService {
         if (ObjectUtil.isEmpty(admin.getPassword())) {
             admin.setPassword(Constants.USER_DEFAULT_PASSWORD);
         }
+        admin.setPassword(PasswordUtils.encode(admin.getPassword()));
         if (ObjectUtil.isEmpty(admin.getName())) {
             admin.setName(admin.getUsername());
         }
@@ -98,12 +100,19 @@ public class AdminService {
         if (ObjectUtil.isNull(dbAdmin)) {
             throw new CustomException(ResultCodeEnum.USER_NOT_EXIST_ERROR);
         }
-        if (!account.getPassword().equals(dbAdmin.getPassword())) {
+        if (!PasswordUtils.matches(account.getPassword(), dbAdmin.getPassword())) {
             throw new CustomException(ResultCodeEnum.USER_ACCOUNT_ERROR);
+        }
+        // 存量明文密码：校验通过后自动升级为 BCrypt 密文
+        if (!PasswordUtils.isEncoded(dbAdmin.getPassword())) {
+            Admin upgrade = new Admin();
+            upgrade.setId(dbAdmin.getId());
+            upgrade.setPassword(PasswordUtils.encode(account.getPassword()));
+            adminMapper.updateById(upgrade);
         }
         // 生成token
         String tokenData = dbAdmin.getId() + "-" + RoleEnum.ADMIN.name();
-        String token = TokenUtils.createToken(tokenData, dbAdmin.getPassword());
+        String token = TokenUtils.createToken(tokenData);
         dbAdmin.setToken(token);
         return dbAdmin;
     }
@@ -121,14 +130,19 @@ public class AdminService {
      * 修改密码
      */
     public void updatePassword(Account account) {
+        // 归属校验：非管理员只能修改自己的密码
+        Account currentUser = TokenUtils.getCurrentUser();
+        if (!RoleEnum.ADMIN.name().equals(currentUser.getRole())) {
+            account.setUsername(currentUser.getUsername());
+        }
         Admin dbAdmin = adminMapper.selectByUsername(account.getUsername());
         if (ObjectUtil.isNull(dbAdmin)) {
             throw new CustomException(ResultCodeEnum.USER_NOT_EXIST_ERROR);
         }
-        if (!account.getPassword().equals(dbAdmin.getPassword())) {
+        if (!PasswordUtils.matches(account.getPassword(), dbAdmin.getPassword())) {
             throw new CustomException(ResultCodeEnum.PARAM_PASSWORD_ERROR);
         }
-        dbAdmin.setPassword(account.getNewPassword());
+        dbAdmin.setPassword(PasswordUtils.encode(account.getNewPassword()));
         adminMapper.updateById(dbAdmin);
     }
 

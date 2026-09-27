@@ -2,12 +2,14 @@ package com.example.service;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.example.common.Constants;
 import com.example.common.enums.ResultCodeEnum;
 import com.example.common.enums.RoleEnum;
 import com.example.entity.Account;
 import com.example.entity.User;
 import com.example.exception.CustomException;
 import com.example.mapper.UserMapper;
+import com.example.utils.PasswordUtils;
 import com.example.utils.TokenUtils;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -47,10 +49,11 @@ public class UserService {
         if(user.getAvatar()==null){
             user.setAvatar(fileAccessUrl + "default-user.png");
         }
-        // 设置默认密码
+        // 设置默认密码，并统一以 BCrypt 密文入库（明文不落库）
         if (ObjectUtil.isEmpty(user.getPassword())) {
-            user.setPassword("123");
+            user.setPassword(Constants.USER_DEFAULT_PASSWORD);
         }
+        user.setPassword(PasswordUtils.encode(user.getPassword()));
         user.setRole(RoleEnum.USER.name());
         userMapper.insert(user);
     }
@@ -123,13 +126,20 @@ public class UserService {
         if (ObjectUtil.isNull(dbUser)) {
             throw new CustomException(ResultCodeEnum.USER_NOT_EXIST_ERROR);
         }
-        if (!account.getPassword().equals(dbUser.getPassword())) {
+        if (!PasswordUtils.matches(account.getPassword(), dbUser.getPassword())) {
             throw new CustomException(ResultCodeEnum.USER_ACCOUNT_ERROR);
+        }
+        // 存量明文密码：校验通过后自动升级为 BCrypt 密文（老账号首次登录即完成迁移）
+        if (!PasswordUtils.isEncoded(dbUser.getPassword())) {
+            User upgrade = new User();
+            upgrade.setId(dbUser.getId());
+            upgrade.setPassword(PasswordUtils.encode(account.getPassword()));
+            userMapper.updateById(upgrade);
         }
         // 生成token：角色取库中真实值（管理员为 ADMIN），兜底 USER
         String role = ObjectUtil.isNotEmpty(dbUser.getRole()) ? dbUser.getRole() : RoleEnum.USER.name();
         String tokenData = dbUser.getId() + "-" + role;
-        String token = TokenUtils.createToken(tokenData, dbUser.getPassword());
+        String token = TokenUtils.createToken(tokenData);
         dbUser.setToken(token);
         return dbUser;
     }
@@ -146,14 +156,19 @@ public class UserService {
      * 修改密码
      */
     public void updatePassword(Account account) {
+        // 归属校验：非管理员只能修改自己的密码，忽略请求中传入的 username
+        Account currentUser = TokenUtils.getCurrentUser();
+        if (!RoleEnum.ADMIN.name().equals(currentUser.getRole())) {
+            account.setUsername(currentUser.getUsername());
+        }
         User dbUser = userMapper.selectByUsername(account.getUsername());
         if (ObjectUtil.isNull(dbUser)) {
             throw new CustomException(ResultCodeEnum.USER_NOT_EXIST_ERROR);
         }
-        if (!account.getPassword().equals(dbUser.getPassword())) {
+        if (!PasswordUtils.matches(account.getPassword(), dbUser.getPassword())) {
             throw new CustomException(ResultCodeEnum.PARAM_PASSWORD_ERROR);
         }
-        dbUser.setPassword(account.getNewPassword());
+        dbUser.setPassword(PasswordUtils.encode(account.getNewPassword()));
         userMapper.updateById(dbUser);
     }
 

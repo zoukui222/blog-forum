@@ -12,6 +12,7 @@ import com.example.service.AdminService;
 import com.example.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -40,20 +41,31 @@ public class TokenUtils {
     @Resource
     UserService userService;
 
+    /** JWT 签名密钥：独立于用户密码，避免用户改密导致全部 token 失效，也避免弱密码被离线爆破 */
+    private static String jwtSecret;
+
+    @Value("${jwt.secret:blog-xs-default-secret-change-me}")
+    private String jwtSecretValue;
+
     @PostConstruct
     public void setUserService() {
         staticAdminService = adminService;
         /*    staticBusinessService = businessService;*/
         staticUserService=userService;
+        jwtSecret = jwtSecretValue;
+    }
+
+    public static String getSecret() {
+        return jwtSecret;
     }
 
     /**
      * 生成token
      */
-    public static String createToken(String data, String sign) {
+    public static String createToken(String data) {
         return JWT.create().withAudience(data) // 将 userId-role 保存到 token 里面,作为载荷
                 .withExpiresAt(DateUtil.offsetHour(new Date(), 2)) // 2小时后token过期
-                .sign(Algorithm.HMAC256(sign)); // 以 password 作为 token 的密钥
+                .sign(Algorithm.HMAC256(jwtSecret)); // 用服务端独立密钥签名
     }
 
     /**

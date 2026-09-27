@@ -18,7 +18,8 @@ public class WebConfig implements  WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor).addPathPatterns("/**")
                 .excludePathPatterns("/")
                 .excludePathPatterns("/login")
-                .excludePathPatterns("/register")
-                .excludePathPatterns("/files/**");
+                .excludePathPatterns("/register");
+        // 注意：/files/** 不再整体排除。文件 GET 由拦截器按方法放行（图片 <img src> 无法带 token），
+        // 上传 POST /files/upload、/files/editor/upload 与删除 DELETE /files/{flag} 均需登录态。
     }
 }

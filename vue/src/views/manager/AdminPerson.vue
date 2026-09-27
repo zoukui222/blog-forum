@@ -6,6 +6,7 @@
           <el-upload
               class="avatar-uploader"
               :action="$baseUrl + '/files/upload'"
+              :headers="{ token: user.token }"
               :show-file-list="false"
               :on-success="handleAvatarSuccess"
           >
