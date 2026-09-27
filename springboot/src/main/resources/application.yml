@@ -39,3 +39,9 @@ pagehelper:
   params: count=countSql
 
 ip: localhost
+
+# 文件访问地址前缀（上传后返回给前端的 URL 前缀）
+#   本地直连后端跑：http://localhost:9090/files/
+#   经 Nginx 部署（80 端口同源）：http://localhost/files/
+file:
+  access-url: http://localhost/files/

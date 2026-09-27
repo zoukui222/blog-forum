@@ -25,11 +25,9 @@ public class FileController {
     // 文件上传存储路径
     private static final String filePath = System.getProperty("user.dir") + "/files/";
 
-    @Value("${server.port:9090}")
-    private String port;
-
-    @Value("${ip:localhost}")
-    private String ip;
+    // 上传文件的访问地址前缀，由配置决定走后端直连还是 Nginx 同源代理
+    @Value("${file.access-url:http://localhost:9090/files/}")
+    private String fileAccessUrl;
 
     /**
      * 文件上传
@@ -53,7 +51,7 @@ public class FileController {
         } catch (Exception e) {
             System.err.println(fileName + "--文件上传失败");
         }
-        String http = "http://" + ip + ":" + port + "/files/";
+        String http = fileAccessUrl;
         return Result.success(http + flag + "-" + fileName);  //  http://localhost:9090/files/1697438073596-avatar.png
     }
 
@@ -115,7 +113,7 @@ public class FileController {
         } catch (Exception e) {
             System.err.println(fileName + "--文件上传失败");
         }
-        String http = "http://" + ip + ":" + port + "/files/";
+        String http = fileAccessUrl;
         return Dict.create().set("errno", 0).set("data", CollUtil.newArrayList(Dict.create().set("url", http + flag + "-" + fileName)));
     }
 

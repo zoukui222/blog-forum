@@ -26,11 +26,9 @@ public class UserService {
 
     @Resource
     private UserMapper userMapper;
-    @Value("${server.port:9090}")
-    private String port;
-
-    @Value("${ip:localhost}")
-    private String ip;
+    // 默认头像所用地址前缀，与文件上传保持一致
+    @Value("${file.access-url:http://localhost:9090/files/}")
+    private String fileAccessUrl;
 
     /**
      * 新增
@@ -47,8 +45,7 @@ public class UserService {
         }
         // 设置头像
         if(user.getAvatar()==null){
-            String http = "http://" + ip + ":" + port + "/files/";
-            user.setAvatar(http + "default-user.png");
+            user.setAvatar(fileAccessUrl + "default-user.png");
         }
         // 设置默认密码
         if (ObjectUtil.isEmpty(user.getPassword())) {
