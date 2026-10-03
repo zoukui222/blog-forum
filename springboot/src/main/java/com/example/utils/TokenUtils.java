@@ -75,6 +75,11 @@ public class TokenUtils {
         try {
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
             String token = request.getHeader(Constants.TOKEN);
+            if (ObjectUtil.isEmpty(token)) {
+                // 与 JwtInterceptor 保持一致：SSE / EventSource 这类无法自定义请求头的场景，
+                // token 只能放在查询参数里。原先这里只认 header，会导致"拦截器放行了、业务层却拿不到用户"
+                token = request.getParameter(Constants.TOKEN);
+            }
             if (ObjectUtil.isNotEmpty(token)) {
                 String userRole = JWT.decode(token).getAudience().get(0);
                 String userId = userRole.split("-")[0];  // 获取用户id

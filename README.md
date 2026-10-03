@@ -32,12 +32,22 @@
 - 用户管理、管理员管理
 - 内容管理：博客、分类、评论、活动、活动报名、公告
 
+### 智能助手（AI Agent）
+
+- 右下角悬浮入口，用自然语言查询站内内容，回答全程 **SSE 流式输出**
+- 基于 **DeepSeek Function Calling**：模型自主决定调用「检索文章 / 读取正文 / 站点统计 / 创建草稿」4 个工具，而非关键词匹配
+- 工具调用过程实时可见（`正在检索…` → `已检索站内文章 4ms`），回答末尾展示工具轮次 / 耗时 / token 消耗
+- 写操作仅管理员可用：工具声明按角色裁剪，执行层再校验一次；每次工具调用落审计表
+
+![AI 助手](docs/screenshots/ai-assistant.png)
+
 ## 二、技术栈
 
 | 层次 | 技术选型 |
 | --- | --- |
 | 后端 | Java 17、Spring Boot 2.5.9、MyBatis-Plus 3.5.3.1、PageHelper 1.4.6、java-jwt 4.3.0、Hutool |
-| 数据库 | MySQL 8.0（10 张业务表、80 个 RESTful 接口） |
+| 数据库 | MySQL 8.0（12 张表：10 张业务表 + 2 张 AI 审计表；82 个 RESTful 接口） |
+| AI | DeepSeek Function Calling（OpenAI 兼容协议）、SSE 流式输出、工具注册表 + 声明式工具扩展 |
 | 前端 | Vue 2.6.14、Vue Router 3.5.1（hash 模式）、Element UI 2.15.14、Vant 2.13.9（移动端）、Axios 1.5.1、ECharts 6.0、WangEditor 4.7、highlight.js |
 | 部署 | Nginx 1.30（静态资源托管 + 反向代理）、Maven 3.9、Node 22 |
 | 安全 | JWT 无状态认证、BCrypt 密码哈希、自定义 `@RequireRole` 注解实现服务端 RBAC |
@@ -60,17 +70,29 @@ mysql> exit
 mysql -uroot -p blog-xs < blog-xs.sql
 ```
 
+```bash
+# 3) 导入 AI Agent 增量脚本（新增 2 张审计表，可重复执行，不影响既有表）
+mysql -uroot -p blog-xs < sql/ai-agent.sql
+```
+
 > 命令行不便时，也可用 Navicat / MySQL Workbench 等图形工具创建 `blog-xs` 库后导入 `blog-xs.sql`。
 
 ### 3. 配置并启动后端
 
-数据库账号密码与 JWT 密钥**不写入版本库**，通过 `application-local.yml`（已加入 .gitignore）或环境变量注入：
+数据库账号密码、JWT 密钥与 AI 服务密钥**均不写入版本库**，通过 `application-local.yml`（已加入 .gitignore）或环境变量注入：
 
 ```bash
 cd springboot/src/main/resources
 cp application-local.yml.example application-local.yml
 # 编辑 application-local.yml，填入本地数据库账号密码
 ```
+
+```yaml
+# 需要启用 AI 助手时，在 application-local.yml 追加（也可用环境变量 AI_API_KEY 注入）
+ai:
+  api-key: sk-xxxxxxxx
+```
+
 
 ```bash
 cd springboot
@@ -107,6 +129,7 @@ nginx.exe -t && nginx.exe
 │       ├── java/com/example/
 │       │   ├── common/                通用层：Result、Constants、自定义注解、JWT 拦截器、枚举
 │       │   ├── controller/            接口层（12 个 Controller / 80 个接口）
+│       │   ├── ai/                    AI Agent 模块（1 个 Controller / 2 个接口、工具注册表、4 个工具、流式客户端、审计）
 │       │   ├── service/               业务层
 │       │   ├── mapper/                MyBatis Mapper 接口
 │       │   ├── entity/                实体类
@@ -114,7 +137,7 @@ nginx.exe -t && nginx.exe
 │       │   └── utils/                 TokenUtils、PasswordUtils
 │       └── resources/
 │           ├── application.yml        主配置（凭据走环境变量 / 本地配置）
-│           └── mapper/*.xml           MyBatis SQL 映射
+│           └── mapper/*.xml           MyBatis SQL 映射（含 AiQueryMapper.xml）
 ├── vue/                               前端工程
 │   └── src/
 │       ├── views/front/               前台页面
@@ -126,6 +149,7 @@ nginx.exe -t && nginx.exe
 ├── deploy/                            Nginx 配置与一键部署脚本
 ├── admin/                             改造方案与验证记录（含实测数据）
 ├── docs/screenshots/                  README 截图
+├── sql/ai-agent.sql                   AI Agent 增量建表脚本（2 张审计表）
 └── blog-xs.sql                        数据库结构与种子数据
 ```
 
@@ -157,6 +181,8 @@ nginx.exe -t && nginx.exe
 | `activity` | 活动（时间、地点、形式、主办方、封面） |
 | `activity_sign` | 活动报名记录 |
 | `notice` | 系统公告 |
+| `ai_chat_log` | AI 会话记录（提问、回答、工具轮次、token 消耗，供回溯与成本核算） |
+| `ai_tool_call_log` | AI 工具调用审计（工具名、入参、返回、成功与否、耗时，供可观测性排查） |
 
 ## 七、相关文档
 
@@ -168,6 +194,7 @@ nginx.exe -t && nginx.exe
 | `密码加密与文件鉴权加固_2026-09-27.md` | BCrypt 与存量惰性升级、响应脱敏、文件接口鉴权与上传校验 |
 | `Nginx部署方案与验证记录_2026-09-27.md` | 部署架构、静态托管与反向代理配置、11 项端到端验证 |
 | `端到端验收记录_2026-09-27.md` | 无头浏览器真点击验收：PC 端 24 项、移动端 9 项结果 |
+| `AI-Agent功能设计与实测_2026-10-03.md` | 工具型 Agent 设计与 9 个关键技术决策（ThreadLocal 失效、流式分片、中文乱码、角色双管控等）、5 组实测记录 |
 
 ## 八、License
 

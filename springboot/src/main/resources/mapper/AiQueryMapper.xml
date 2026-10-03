@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ai.mapper.AiQueryMapper">
+
+    <!-- 检索用轻量字段：刻意不含 content，避免把长篇正文塞进模型上下文 -->
+    <sql id="Search_Columns">
+        blog.id, blog.title, blog.descr, blog.tags, blog.date, blog.read_count,
+        blog.category_id, category.name as categoryName, user.name as userName
+    </sql>
+
+    <select id="searchBlogs" resultType="com.example.entity.Blog">
+        select
+        <include refid="Search_Columns"/>
+        from blog
+        left join category on blog.category_id = category.id
+        left join user on blog.user_id = user.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                and (blog.title like concat('%', #{keyword}, '%')
+                or blog.descr like concat('%', #{keyword}, '%')
+                or blog.tags like concat('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                and blog.category_id = #{categoryId}
+            </if>
+        </where>
+        order by blog.read_count desc
+        limit #{limit}
+    </select>
+
+    <select id="selectLatestBlogs" resultType="com.example.entity.Blog">
+        select
+        <include refid="Search_Columns"/>
+        from blog
+        left join category on blog.category_id = category.id
+        left join user on blog.user_id = user.id
+        order by blog.id desc
+        limit #{limit}
+    </select>
+
+    <select id="selectBlogDetail" resultType="com.example.entity.Blog">
+        select
+        blog.*, category.name as categoryName, user.name as userName
+        from blog
+        left join category on blog.category_id = category.id
+        left join user on blog.user_id = user.id
+        where blog.id = #{id}
+    </select>
+
+    <select id="selectBlogSummary" resultType="java.util.Map">
+        select
+            (select count(*) from blog)                       as blogCount,
+            (select ifnull(sum(read_count), 0) from blog)     as totalReadCount,
+            (select count(*) from comment where module = #{commentModule}) as commentCount,
+            (select count(*) from user)                       as userCount,
+            (select count(*) from category)                   as categoryCount
+    </select>
+
+    <select id="selectCategoryStats" resultType="java.util.Map">
+        select
+            category.name as name,
+            count(blog.id) as value
+        from category
+        left join blog on blog.category_id = category.id
+        group by category.id, category.name
+        order by value desc
+    </select>
+
+    <select id="selectCategoryList" resultType="java.util.Map">
+        select id as id, name as name from category order by id
+    </select>
+
+</mapper>
